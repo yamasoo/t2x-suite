@@ -1,0 +1,27 @@
+{
+  "portal": {
+    "name": "t2x-suite Portal",
+    "url": "http://127.0.0.1:8700"
+  },
+  "novel_studio": {
+    "name": "Novel Studio",
+    "dir": "E:\\novel-studio",
+    "python": "E:\\novel-studio\\.venv\\Scripts\\python.exe",
+    "args": ["app.py", "--no-browser"],
+    "url": "http://127.0.0.1:8765"
+  },
+  "t2vn": {
+    "name": "T2VN / T2C",
+    "dir": "E:\\text_2_visual_novel",
+    "python": "E:\\text_2_visual_novel\\venv\\Scripts\\python.exe",
+    "args": ["-m", "t2vn.server", "--no-browser"],
+    "url": "http://127.0.0.1:7866"
+  },
+  "shared": {
+    "library_dir": "",
+    "comfyui_url": "",
+    "tagcomplete_csv": ""
+  },
+  "open_browser": true,
+  "open_targets": ["portal"]
+}

@@ -1,0 +1,6 @@
+# Local overrides and runtime files
+suite.local.json
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

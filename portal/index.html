@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>t2x-suite · 創作管線總覽</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #1b2230;
+      --muted: #5d677a;
+      --border: #dde2eb;
+      --accent: #3b6ef6;
+      --accent-soft: rgba(59, 110, 246, 0.12);
+      --ok: #1f9d63;
+      --warn: #d48806;
+      --bad: #c93b3b;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #11141a;
+        --card: #191e27;
+        --text: #e8edf5;
+        --muted: #98a3b8;
+        --border: #2a3140;
+        --accent: #6b96ff;
+        --accent-soft: rgba(107, 150, 255, 0.16);
+        --ok: #34c77b;
+        --warn: #f0b429;
+        --bad: #f06565;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Noto Sans TC", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; }
+    header {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 18px;
+    }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .services { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+    .svc {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--border);
+      text-decoration: none; color: inherit; font-size: 13px;
+    }
+    .svc:hover { border-color: var(--accent); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--bad); }
+    .dot.ok { background: var(--ok); }
+    .dot.off { background: var(--muted); }
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      margin-bottom: 14px;
+    }
+    input[type="search"] {
+      flex: 1 1 240px; padding: 8px 12px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 11px; border-radius: 7px; font-size: 13px; font-weight: 500;
+      border: 1px solid var(--border); background: var(--card); color: var(--text);
+      text-decoration: none; cursor: pointer;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { opacity: 0.92; color: #fff; }
+    .btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block; padding: 2px 7px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; background: var(--accent-soft); color: var(--accent);
+      margin-left: 6px;
+    }
+    .badge.warn { background: rgba(212, 136, 6, 0.16); color: var(--warn); }
+    .badge.muted { background: rgba(152, 163, 184, 0.16); color: var(--muted); }
+    .muted { color: var(--muted); font-size: 12px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .bar { width: 120px; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; margin-top: 4px; }
+    .bar > i { display: block; height: 100%; background: var(--ok); }
+    .empty { padding: 36px 20px; text-align: center; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>t2x-suite · 創作管線總覽</h1>
+        <div class="sub">Novel Studio（寫作與設定）→ T2VN（視覺小說）→ T2C（頁漫改編）唯讀整合入口</div>
+      </div>
+      <button id="refresh-btn" class="btn" type="button">重新整理</button>
+    </header>
+
+    <div id="services" class="services"></div>
+
+    <div class="toolbar">
+      <input id="filter-q" type="search" placeholder="篩選書名或 ID…" />
+      <button class="btn active" data-mode="all" type="button">全部</button>
+      <button class="btn" data-mode="adapted" type="button">已進改編</button>
+      <button class="btn" data-mode="unimported" type="button">僅在寫作端</button>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>作品</th>
+            <th>寫作（Novel Studio）</th>
+            <th>視覺小說（T2VN）</th>
+            <th>頁漫（T2C）</th>
+            <th>快速前往</th>
+          </tr>
+        </thead>
+        <tbody id="books-body">
+          <tr><td colspan="5" class="empty">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    function el(tag, attrs, ...children) {
+      const node = document.createElement(tag);
+      if (attrs) {
+        for (const [k, v] of Object.entries(attrs)) {
+          if (v === null || v === undefined || v === false) continue;
+          if (k.startsWith("on") && typeof v === "function") node[k] = v;
+          else if (k === "class") node.className = v;
+          else node.setAttribute(k, v === true ? "" : String(v));
+        }
+      }
+      for (const ch of children.flat()) {
+        if (ch === null || ch === undefined || ch === false) continue;
+        node.append(typeof ch === "string" ? document.createTextNode(ch) : ch);
+      }
+      return node;
+    }
+
+    const enc = encodeURIComponent;
+    let state = { data: null, mode: "all", q: "" };
+
+    function renderServices(svcs) {
+      const box = document.getElementById("services");
+      const items = [
+        { key: "novel_studio", label: "Novel Studio", target: "novel_studio", info: svcs.novel_studio },
+        { key: "t2vn", label: "T2VN / T2C", target: "t2vn_studio", info: svcs.t2vn },
+        { key: "comfyui", label: "ComfyUI", target: "comfyui", info: svcs.comfyui },
+      ];
+      box.replaceChildren(...items.map(({ label, target, info }) => {
+        const hasUrl = Boolean(info && info.url);
+        const online = Boolean(info && info.online);
+        const dotCls = !hasUrl ? "dot off" : (online ? "dot ok" : "dot");
+        const ver = info && info.version ? ` v${info.version}` : "";
+        const statusText = !hasUrl ? "未設定" : (online ? "在線" : "離線");
+        return el(hasUrl ? "a" : "div", {
+          class: "svc",
+          href: hasUrl ? info.url + "/" : null,
+          target: hasUrl ? target : null,
+          rel: hasUrl ? "noopener" : null,
+        },
+          el("span", { class: dotCls }),
+          el("strong", {}, label + ver),
+          el("span", { class: "muted" }, statusText + (hasUrl ? " ↗" : ""))
+        );
+      }));
+    }
+
+    function renderBooks() {
+      const tbody = document.getElementById("books-body");
+      if (!state.data) return;
+      const svcs = state.data.services || {};
+      const nsUrl = (svcs.novel_studio && svcs.novel_studio.url) || "";
+      const t2Url = (svcs.t2vn && svcs.t2vn.url) || "";
+      const q = state.q.trim().toLowerCase();
+
+      const rows = (state.data.books || []).filter((b) => {
+        if (state.mode === "adapted" && !(b.t2vn && b.t2vn.imported)) return false;
+        if (state.mode === "unimported" && (b.t2vn && b.t2vn.imported)) return false;
+        if (q) {
+          const hay = `${b.title} ${b.key} ${(b.t2vn && b.t2vn.book_id) || ""}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (!rows.length) {
+        tbody.replaceChildren(el("tr", {}, el("td", { colspan: 5, class: "empty" }, "目前沒有符合條件的作品。")));
+        return;
+      }
+
+      tbody.replaceChildren(...rows.map((b) => {
+        const titleCell = el("td", {},
+          el("div", {},
+            el("strong", {}, b.title),
+            el("span", { class: "badge muted" }, b.lang || "zh-TW"),
+            b.needs_migration ? el("span", { class: "badge warn" }, "待轉 v3") : null
+          ),
+          el("div", { class: "muted" }, b.t2vn && b.t2vn.book_id && b.t2vn.book_id !== b.key
+            ? `${b.key} → ${b.t2vn.book_id}` : b.key)
+        );
+
+        let nsCell;
+        if (b.ns) {
+          const cand = b.ns.pending_candidates ? ` · 候選 ${b.ns.pending_candidates}` : "";
+          nsCell = el("td", {},
+            el("div", {}, `已寫 ${b.ns.chapters_written} 章` + (b.ns.chapters_planned ? ` / 排綱 ${b.ns.chapters_planned}` : "")),
+            el("div", { class: "muted" }, `${Number(b.ns.chars || 0).toLocaleString()} ${b.ns.unit || "字"}${cand}`)
+          );
+        } else {
+          nsCell = el("td", { class: "muted" }, "外部匯入／未在書庫");
+        }
+
+        let t2Cell;
+        if (b.t2vn && b.t2vn.imported) {
+          const pct = b.t2vn.chapters ? Math.round((100 * b.t2vn.reviewed) / b.t2vn.chapters) : 0;
+          t2Cell = el("td", {},
+            el("div", {}, `${b.t2vn.chapters} 章 · 標註 ${b.t2vn.annotated} · 校對 ${b.t2vn.reviewed}`),
+            el("div", { class: "bar" }, el("i", { style: `width:${pct}%` }))
+          );
+        } else {
+          const vc = b.ns && b.ns.visual_cards ? `（視覺卡 ${b.ns.visual_cards} 張就緒）` : "";
+          t2Cell = el("td", { class: "muted" }, `尚未匯入${vc}`);
+        }
+
+        const comicCount = (b.comic && b.comic.count) || 0;
+        const comicCell = comicCount
+          ? el("td", {}, el("div", {}, `${comicCount} 個專案`),
+              el("div", { class: "muted" }, (b.comic.projects || []).map((p) => p.title || p.project_id).slice(0, 2).join("、")))
+          : el("td", { class: "muted" }, "—");
+
+        const acts = [];
+        if (b.ns && nsUrl) {
+          acts.push(el("a", { class: "btn", href: `${nsUrl}/#/b/${enc(b.ns.id)}`, target: "novel_studio", rel: "noopener" }, "寫作 ↗"));
+          acts.push(el("a", { class: "btn", href: `${nsUrl}/#/b/${enc(b.ns.id)}/bible`, target: "novel_studio", rel: "noopener" }, "設定／視覺卡 ↗"));
+        }
+        if (b.t2vn && b.t2vn.imported && t2Url) {
+          const bid = enc(b.t2vn.book_id);
+          acts.push(el("a", { class: "btn", href: `${t2Url}/#/book/${bid}`, target: "t2vn_studio", rel: "noopener" }, "VN ↗"));
+          acts.push(el("a", { class: "btn", href: `${t2Url}/#/book/${bid}/assets`, target: "t2vn_studio", rel: "noopener" }, "外觀 ↗"));
+          acts.push(el("a", { class: "btn", href: `${t2Url}/#/book/${bid}/comic`, target: "t2vn_studio", rel: "noopener" }, "漫畫 ↗"));
+        } else if (b.ns && t2Url) {
+          acts.push(el("a", { class: "btn primary", href: `${t2Url}/#/?source=${enc(b.ns.id)}`, target: "t2vn_studio", rel: "noopener" }, "匯入改編 ↗"));
+        }
+
+        return el("tr", {}, titleCell, nsCell, t2Cell, comicCell, el("td", {}, el("div", { class: "actions" }, ...acts)));
+      }));
+    }
+
+    async function load() {
+      const btn = document.getElementById("refresh-btn");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/overview", { cache: "no-store" });
+        state.data = await res.json();
+        renderServices(state.data.services || {});
+        renderBooks();
+      } catch (err) {
+        document.getElementById("books-body").replaceChildren(
+          el("tr", {}, el("td", { colspan: 5, class: "empty" }, `讀取失敗：${err}`))
+        );
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById("refresh-btn").onclick = load;
+    document.getElementById("filter-q").oninput = (e) => { state.q = e.target.value; renderBooks(); };
+    for (const btn of document.querySelectorAll("[data-mode]")) {
+      btn.onclick = () => {
+        state.mode = btn.getAttribute("data-mode");
+        for (const other of document.querySelectorAll("[data-mode]")) {
+          other.classList.toggle("active", other === btn);
+        }
+        renderBooks();
+      };
+    }
+
+    load();
+  </script>
+</body>
+</html>
