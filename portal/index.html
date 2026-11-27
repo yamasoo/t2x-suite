@@ -5,116 +5,314 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>t2x-suite · 創作管線總覽</title>
   <style>
+    /* 沿用 Novel Studio / T2VN 共用的 fekit 紙張書卷色系 tokens */
     :root {
-      color-scheme: light dark;
-      --bg: #f6f7f9;
-      --card: #ffffff;
-      --text: #1b2230;
-      --muted: #5d677a;
-      --border: #dde2eb;
-      --accent: #3b6ef6;
-      --accent-soft: rgba(59, 110, 246, 0.12);
-      --ok: #1f9d63;
-      --warn: #d48806;
-      --bad: #c93b3b;
+      color-scheme: light;
+      --bg: #f6f2ea;
+      --bg-elev: #fffdf8;
+      --bg-sunken: #ede7da;
+      --fg: #2b2620;
+      --fg-muted: #6e655a;
+      --fg-faint: #9a9084;
+      --line: #ddd4c4;
+      --line-strong: #c4b8a3;
+
+      /* NS 主色：印章朱紅 */
+      --accent: #8a3b2e;
+      --accent-hover: #722f24;
+      --accent-soft: #f1dfd9;
+      --on-accent: #fffdf8;
+
+      /* T2VN 主色：靛藍；T2C 主色：松綠 */
+      --info: #2f5a7a;
+      --info-soft: #d9e6ef;
+      --ok: #3f6b3a;
+      --ok-soft: #dfeadb;
+      --warn: #8a6410;
+      --warn-soft: #f3e8c8;
+      --err: #a02a2a;
+      --err-soft: #f4d9d6;
+
+      --shadow-1: 0 1px 2px rgba(60, 40, 20, 0.08);
+      --shadow-2: 0 6px 20px rgba(60, 40, 20, 0.10);
+      --font-sans: "Microsoft JhengHei", "微軟正黑體", "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+      --font-serif: "Noto Serif TC", "Source Han Serif TC", "PMingLiU", serif;
+      --font-mono: ui-monospace, "Cascadia Mono", Consolas, "Noto Sans Mono CJK TC", monospace;
+      --radius: 8px;
+      --radius-lg: 12px;
     }
+
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #11141a;
-        --card: #191e27;
-        --text: #e8edf5;
-        --muted: #98a3b8;
-        --border: #2a3140;
-        --accent: #6b96ff;
-        --accent-soft: rgba(107, 150, 255, 0.16);
-        --ok: #34c77b;
-        --warn: #f0b429;
-        --bad: #f06565;
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #1c1915;
+        --bg-elev: #26221c;
+        --bg-sunken: #15130f;
+        --fg: #ece5d8;
+        --fg-muted: #b0a696;
+        --fg-faint: #857b6d;
+        --line: #3a342b;
+        --line-strong: #52493c;
+
+        --accent: #d9826f;
+        --accent-hover: #e89886;
+        --accent-soft: #3d2620;
+        --on-accent: #1c1915;
+
+        --info: #86b6d8;
+        --info-soft: #1c2c38;
+        --ok: #8fc287;
+        --ok-soft: #223020;
+        --warn: #e0b95c;
+        --warn-soft: #382d12;
+        --err: #ee8d86;
+        --err-soft: #3d1f1d;
+
+        --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.45);
       }
     }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #1c1915;
+      --bg-elev: #26221c;
+      --bg-sunken: #15130f;
+      --fg: #ece5d8;
+      --fg-muted: #b0a696;
+      --fg-faint: #857b6d;
+      --line: #3a342b;
+      --line-strong: #52493c;
+
+      --accent: #d9826f;
+      --accent-hover: #e89886;
+      --accent-soft: #3d2620;
+      --on-accent: #1c1915;
+
+      --info: #86b6d8;
+      --info-soft: #1c2c38;
+      --ok: #8fc287;
+      --ok-soft: #223020;
+      --warn: #e0b95c;
+      --warn-soft: #382d12;
+      --err: #ee8d86;
+      --err-soft: #3d1f1d;
+
+      --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+
     * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
     body {
-      margin: 0;
-      font-family: "Segoe UI", "Noto Sans TC", system-ui, -apple-system, sans-serif;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.6;
       background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
+      color: var(--fg);
     }
-    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 48px; }
-    header {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-      gap: 12px; margin-bottom: 18px;
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* 頂列：比照 fekit shell topbar */
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      background: var(--bg-elev);
+      border-bottom: 1px solid var(--line);
+      box-shadow: var(--shadow-1);
     }
-    h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }
-    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .services { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-    .svc {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 8px 12px; border-radius: 10px;
-      background: var(--card); border: 1px solid var(--border);
-      text-decoration: none; color: inherit; font-size: 13px;
+    .topbar-inner {
+      max-width: 1220px; margin: 0 auto; padding: 10px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     }
-    .svc:hover { border-color: var(--accent); }
-    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--bad); }
-    .dot.ok { background: var(--ok); }
-    .dot.off { background: var(--muted); }
-    .toolbar {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-      margin-bottom: 14px;
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: var(--fg); text-decoration: none;
     }
-    input[type="search"] {
-      flex: 1 1 240px; padding: 8px 12px; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px;
+    .brand:hover { text-decoration: none; }
+    .brand-mark {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent); color: var(--on-accent);
+      font-family: var(--font-serif); font-weight: 700; font-size: 15px;
+      box-shadow: var(--shadow-1);
     }
+    .brand-title { font-family: var(--font-serif); font-size: 17px; font-weight: 700; letter-spacing: 0.4px; }
+    .brand-sub { color: var(--fg-muted); font-size: 12px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .wrap { max-width: 1220px; margin: 0 auto; padding: 22px 24px 56px; }
+
+    /* 按鈕與膠囊：沿用 fekit 手感 */
     .btn {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 6px 11px; border-radius: 7px; font-size: 13px; font-weight: 500;
-      border: 1px solid var(--border); background: var(--card); color: var(--text);
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500;
+      border: 1px solid var(--line-strong);
+      background: var(--bg-elev); color: var(--fg);
       text-decoration: none; cursor: pointer;
+      transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
-    .btn:hover { border-color: var(--accent); color: var(--accent); }
-    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn.primary:hover { opacity: 0.92; color: #fff; }
+    .btn:hover { border-color: var(--fg-muted); text-decoration: none; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
     .btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .btn.sm { padding: 3px 9px; font-size: 12.5px; }
+
+    /* 套件識別徽章（NS / T2VN / T2C） */
+    .kit {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 1px 7px; border-radius: 999px;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.3px; vertical-align: middle;
+    }
+    .kit-ns { background: var(--accent-soft); color: var(--accent); }
+    .kit-t2vn { background: var(--info-soft); color: var(--info); }
+    .kit-t2c { background: var(--ok-soft); color: var(--ok); }
+    .kit-comfy { background: var(--warn-soft); color: var(--warn); }
+
+    .btn-ns { border-color: var(--accent-soft); color: var(--accent); }
+    .btn-ns:hover { background: var(--accent-soft); border-color: var(--accent); }
+    .btn-t2vn { border-color: var(--info-soft); color: var(--info); }
+    .btn-t2vn:hover { background: var(--info-soft); border-color: var(--info); }
+    .btn-t2c { border-color: var(--ok-soft); color: var(--ok); }
+    .btn-t2c:hover { background: var(--ok-soft); border-color: var(--ok); }
+
+    /* 步驟管線卡（明確呈現 Step 1 NS → Step 2 T2VN → Step 3 T2C） */
+    .pipeline {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+    .step-card {
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--line-strong);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-1);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .step-card.ns { border-top-color: var(--accent); }
+    .step-card.t2vn { border-top-color: var(--info); }
+    .step-card.t2c { border-top-color: var(--ok); }
+    .step-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .step-no { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
+    .step-title { font-family: var(--font-serif); font-size: 16px; font-weight: 700; margin: 0; }
+    .step-desc { font-size: 12.5px; color: var(--fg-muted); margin: 0; flex: 1; }
+    .step-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 6px; border-top: 1px dashed var(--line); }
+    .step-arrow {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--fg-faint); font-size: 18px; padding: 0 2px; user-select: none;
+    }
+    .step-arrow small { font-size: 11px; white-space: nowrap; }
+    @media (max-width: 960px) {
+      .pipeline { grid-template-columns: 1fr; }
+      .step-arrow { flex-direction: row; gap: 6px; padding: 2px 0; }
+      .step-arrow span { transform: rotate(90deg); display: inline-block; }
+    }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--fg-muted);
+      padding: 2px 8px; border-radius: 999px; background: var(--bg-sunken);
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--err); }
+    .dot.ok { background: var(--ok); }
+    .dot.off { background: var(--fg-faint); }
+
+    /* 篩選工具列 */
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 10px; margin-bottom: 12px;
+    }
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    input[type="search"] {
+      width: 260px; max-width: 100%;
+      padding: 6px 11px; border-radius: var(--radius);
+      border: 1px solid var(--line-strong);
+      background: var(--bg-elev); color: var(--fg); font-size: 13.5px;
+    }
+    input[type="search"]:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+    /* 作品總表卡片 */
     .card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 12px; overflow: hidden;
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-1);
+      overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); font-weight: 600; }
-    tr:last-child td { border-bottom: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 820px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    thead th {
+      background: var(--bg-sunken);
+      font-size: 12px; color: var(--fg-muted); font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    th .th-wrap { display: inline-flex; align-items: center; gap: 6px; }
+    tbody tr:hover td { background: rgba(138, 59, 46, 0.03); }
+    tbody tr:last-child td { border-bottom: none; }
+
     .badge {
-      display: inline-block; padding: 2px 7px; border-radius: 999px;
-      font-size: 11px; font-weight: 600; background: var(--accent-soft); color: var(--accent);
-      margin-left: 6px;
+      display: inline-block; padding: 1px 7px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; margin-left: 6px;
+      background: var(--bg-sunken); color: var(--fg-muted);
     }
-    .badge.warn { background: rgba(212, 136, 6, 0.16); color: var(--warn); }
-    .badge.muted { background: rgba(152, 163, 184, 0.16); color: var(--muted); }
-    .muted { color: var(--muted); font-size: 12px; }
+    .badge.warn { background: var(--warn-soft); color: var(--warn); }
+    .muted { color: var(--fg-muted); font-size: 12px; }
+    .mono { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-faint); }
     .actions { display: flex; flex-wrap: wrap; gap: 6px; }
-    .bar { width: 120px; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; margin-top: 4px; }
-    .bar > i { display: block; height: 100%; background: var(--ok); }
-    .empty { padding: 36px 20px; text-align: center; color: var(--muted); }
+    .bar { width: 120px; height: 6px; border-radius: 999px; background: var(--bg-sunken); overflow: hidden; margin-top: 5px; }
+    .bar > i { display: block; height: 100%; background: var(--info); }
+    .empty { padding: 36px 20px; text-align: center; color: var(--fg-muted); }
+
+    /* 頁尾：GitHub 專案導覽與安全說明 */
+    .footer {
+      margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line);
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 10px; font-size: 12.5px; color: var(--fg-muted);
+    }
+    .gh-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .gh-links a { color: var(--fg-muted); font-weight: 500; }
+    .gh-links a:hover { color: var(--accent); }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>t2x-suite · 創作管線總覽</h1>
-        <div class="sub">Novel Studio（寫作與設定）→ T2VN（視覺小說）→ T2C（頁漫改編）唯讀整合入口</div>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">集</span>
+        <span>
+          <span class="brand-title">t2x-suite 創作管線總覽</span>
+          <span class="brand-sub"> · Novel Studio → T2VN → T2C</span>
+        </span>
+      </a>
+      <div class="top-actions">
+        <span id="comfy-pill" class="status-pill"></span>
+        <a class="btn sm" href="https://github.com/yamasoo/t2x-suite" target="_blank" rel="noopener">GitHub ↗</a>
+        <button id="theme-btn" class="btn sm" type="button" title="切換淺色／深色主題">深色</button>
+        <button id="refresh-btn" class="btn sm primary" type="button">重新整理</button>
       </div>
-      <button id="refresh-btn" class="btn" type="button">重新整理</button>
-    </header>
+    </div>
+  </div>
 
-    <div id="services" class="services"></div>
+  <div class="wrap">
+    <section id="pipeline" class="pipeline" aria-label="創作步驟與對應套件"></section>
 
     <div class="toolbar">
-      <input id="filter-q" type="search" placeholder="篩選書名或 ID…" />
-      <button class="btn active" data-mode="all" type="button">全部</button>
-      <button class="btn" data-mode="adapted" type="button">已進改編</button>
-      <button class="btn" data-mode="unimported" type="button">僅在寫作端</button>
+      <div class="toolbar-left">
+        <input id="filter-q" type="search" placeholder="搜尋作品名稱或 ID…" />
+        <button class="btn sm active" data-mode="all" type="button">全部作品</button>
+        <button class="btn sm" data-mode="adapted" type="button">已進改編（T2VN / T2C）</button>
+        <button class="btn sm" data-mode="unimported" type="button">僅在寫作端（NS）</button>
+      </div>
+      <div class="toolbar-right">
+        <span id="summary-count" class="muted"></span>
+      </div>
     </div>
 
     <div class="card">
@@ -122,9 +320,9 @@
         <thead>
           <tr>
             <th>作品</th>
-            <th>寫作（Novel Studio）</th>
-            <th>視覺小說（T2VN）</th>
-            <th>頁漫（T2C）</th>
+            <th><span class="th-wrap"><span class="kit kit-ns">NS</span> ① 寫作與視覺卡</span></th>
+            <th><span class="th-wrap"><span class="kit kit-t2vn">T2VN</span> ② 視覺小說改編</span></th>
+            <th><span class="th-wrap"><span class="kit kit-t2c">T2C</span> ③ 頁漫改編</span></th>
             <th>快速前往</th>
           </tr>
         </thead>
@@ -133,10 +331,28 @@
         </tbody>
       </table>
     </div>
+
+    <footer class="footer">
+      <div class="gh-links">
+        <span>GitHub 專案：</span>
+        <a href="https://github.com/yamasoo/t2x-suite" target="_blank" rel="noopener">t2x-suite ↗</a>
+        <a href="https://github.com/yamasoo/novel-studio" target="_blank" rel="noopener">Novel Studio (NS) ↗</a>
+        <a href="https://github.com/yamasoo/text_2_visual_novel" target="_blank" rel="noopener">T2VN ↗</a>
+        <a href="https://github.com/yamasoo/text2comics" target="_blank" rel="noopener">T2C (text2comics) ↗</a>
+      </div>
+      <div>唯讀總覽（僅綁 127.0.0.1）· 各專案仍可完全獨立開發與啟動</div>
+    </footer>
   </div>
 
   <script>
     "use strict";
+
+    const GH = {
+      suite: "https://github.com/yamasoo/t2x-suite",
+      ns: "https://github.com/yamasoo/novel-studio",
+      t2vn: "https://github.com/yamasoo/text_2_visual_novel",
+      t2c: "https://github.com/yamasoo/text2comics",
+    };
 
     function el(tag, attrs, ...children) {
       const node = document.createElement(tag);
@@ -158,30 +374,105 @@
     const enc = encodeURIComponent;
     let state = { data: null, mode: "all", q: "" };
 
-    function renderServices(svcs) {
-      const box = document.getElementById("services");
-      const items = [
-        { key: "novel_studio", label: "Novel Studio", target: "novel_studio", info: svcs.novel_studio },
-        { key: "t2vn", label: "T2VN / T2C", target: "t2vn_studio", info: svcs.t2vn },
-        { key: "comfyui", label: "ComfyUI", target: "comfyui", info: svcs.comfyui },
-      ];
-      box.replaceChildren(...items.map(({ label, target, info }) => {
-        const hasUrl = Boolean(info && info.url);
-        const online = Boolean(info && info.online);
-        const dotCls = !hasUrl ? "dot off" : (online ? "dot ok" : "dot");
-        const ver = info && info.version ? ` v${info.version}` : "";
-        const statusText = !hasUrl ? "未設定" : (online ? "在線" : "離線");
-        return el(hasUrl ? "a" : "div", {
-          class: "svc",
-          href: hasUrl ? info.url + "/" : null,
-          target: hasUrl ? target : null,
-          rel: hasUrl ? "noopener" : null,
-        },
-          el("span", { class: dotCls }),
-          el("strong", {}, label + ver),
-          el("span", { class: "muted" }, statusText + (hasUrl ? " ↗" : ""))
-        );
-      }));
+    /* 深淺主題切換（相容 fekit data-theme） */
+    function initTheme() {
+      const btn = document.getElementById("theme-btn");
+      const saved = localStorage.getItem("t2x.theme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.setAttribute("data-theme", saved);
+      }
+      function syncLabel() {
+        const cur = document.documentElement.getAttribute("data-theme")
+          || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        btn.textContent = cur === "dark" ? "淺色" : "深色";
+      }
+      btn.onclick = () => {
+        const cur = document.documentElement.getAttribute("data-theme")
+          || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        const next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("t2x.theme", next);
+        syncLabel();
+      };
+      syncLabel();
+    }
+
+    function statusPill(label, info) {
+      const hasUrl = Boolean(info && info.url);
+      const online = Boolean(info && info.online);
+      const dotCls = !hasUrl ? "dot off" : (online ? "dot ok" : "dot");
+      const ver = info && info.version ? ` v${info.version}` : "";
+      const txt = !hasUrl ? "未設定" : (online ? "在線" : "離線");
+      return el("span", { class: "status-pill" }, el("span", { class: dotCls }), `${label}${ver} · ${txt}`);
+    }
+
+    function renderPipeline(svcs) {
+      const ns = svcs.novel_studio || {};
+      const t2 = svcs.t2vn || {};
+      const comfy = svcs.comfyui || {};
+
+      // 頂列 ComfyUI 狀態膠囊
+      const comfyPill = document.getElementById("comfy-pill");
+      const comfyDot = !comfy.url ? "dot off" : (comfy.online ? "dot ok" : "dot");
+      comfyPill.replaceChildren(
+        el("span", { class: comfyDot }),
+        el("span", { class: "kit kit-comfy" }, "ComfyUI"),
+        el("span", {}, !comfy.url ? "未設定" : (comfy.online ? "在線" : "離線"))
+      );
+
+      const step1 = el("article", { class: "step-card ns" },
+        el("div", { class: "step-head" },
+          el("span", { class: "step-no" }, "步驟 ① · 上游正本"),
+          el("span", { class: "kit kit-ns" }, "NS · Novel Studio")
+        ),
+        el("h2", { class: "step-title" }, "寫作、設定集與角色視覺卡"),
+        el("p", { class: "step-desc" }, "開書、排綱、寫稿（候選隔離）、反推補設定，並產出相容 VN 與頁漫的結構化視覺卡。"),
+        el("div", { class: "step-foot" },
+          statusPill("服務", ns),
+          el("div", { class: "actions" },
+            el("a", { class: "btn sm", href: GH.ns, target: "_blank", rel: "noopener" }, "GitHub ↗"),
+            ns.url ? el("a", { class: "btn sm btn-ns", href: ns.url + "/", target: "novel_studio", rel: "noopener" }, "開啟 NS ↗") : null
+          )
+        )
+      );
+
+      const arrow1 = el("div", { class: "step-arrow" }, el("span", {}, "→"), el("small", {}, "唯讀同步"));
+
+      const step2 = el("article", { class: "step-card t2vn" },
+        el("div", { class: "step-head" },
+          el("span", { class: "step-no" }, "步驟 ② · 視覺小說"),
+          el("span", { class: "kit kit-t2vn" }, "T2VN")
+        ),
+        el("h2", { class: "step-title" }, "劇本標註、立繪語音與 Ren'Py"),
+        el("p", { class: "step-desc" }, "從書庫唯讀匯入正文與視覺卡，逐句校對對白、生成立繪／配樂／語音，輸出可遊玩專案。"),
+        el("div", { class: "step-foot" },
+          statusPill("服務", t2),
+          el("div", { class: "actions" },
+            el("a", { class: "btn sm", href: GH.t2vn, target: "_blank", rel: "noopener" }, "GitHub ↗"),
+            t2.url ? el("a", { class: "btn sm btn-t2vn", href: t2.url + "/", target: "t2vn_studio", rel: "noopener" }, "開啟 T2VN ↗") : null
+          )
+        )
+      );
+
+      const arrow2 = el("div", { class: "step-arrow" }, el("span", {}, "→"), el("small", {}, "外觀卡共用"));
+
+      const step3 = el("article", { class: "step-card t2c" },
+        el("div", { class: "step-head" },
+          el("span", { class: "step-no" }, "步驟 ③ · 日式頁漫"),
+          el("span", { class: "kit kit-t2c" }, "T2C · 內嵌於 T2VN")
+        ),
+        el("h2", { class: "step-title" }, "分鏡、出圖、嵌字與 PDF / CBZ"),
+        el("p", { class: "step-desc" }, "與 T2VN 共用同一份外觀卡與 ComfyUI profile，逐頁分鏡出圖、微調對話框並輸出右翻漫畫。"),
+        el("div", { class: "step-foot" },
+          statusPill("引擎", { url: t2.url, online: t2.online }),
+          el("div", { class: "actions" },
+            el("a", { class: "btn sm", href: GH.t2c, target: "_blank", rel: "noopener" }, "GitHub ↗"),
+            t2.url ? el("a", { class: "btn sm btn-t2c", href: t2.url + "/", target: "t2vn_studio", rel: "noopener" }, "前往 T2C ↗") : null
+          )
+        )
+      );
+
+      document.getElementById("pipeline").replaceChildren(step1, arrow1, step2, arrow2, step3);
     }
 
     function renderBooks() {
@@ -192,7 +483,8 @@
       const t2Url = (svcs.t2vn && svcs.t2vn.url) || "";
       const q = state.q.trim().toLowerCase();
 
-      const rows = (state.data.books || []).filter((b) => {
+      const all = state.data.books || [];
+      const rows = all.filter((b) => {
         if (state.mode === "adapted" && !(b.t2vn && b.t2vn.imported)) return false;
         if (state.mode === "unimported" && (b.t2vn && b.t2vn.imported)) return false;
         if (q) {
@@ -201,6 +493,8 @@
         }
         return true;
       });
+
+      document.getElementById("summary-count").textContent = `顯示 ${rows.length} / 共 ${all.length} 部作品`;
 
       if (!rows.length) {
         tbody.replaceChildren(el("tr", {}, el("td", { colspan: 5, class: "empty" }, "目前沒有符合條件的作品。")));
@@ -211,10 +505,10 @@
         const titleCell = el("td", {},
           el("div", {},
             el("strong", {}, b.title),
-            el("span", { class: "badge muted" }, b.lang || "zh-TW"),
+            el("span", { class: "badge" }, b.lang || "zh-TW"),
             b.needs_migration ? el("span", { class: "badge warn" }, "待轉 v3") : null
           ),
-          el("div", { class: "muted" }, b.t2vn && b.t2vn.book_id && b.t2vn.book_id !== b.key
+          el("div", { class: "mono" }, b.t2vn && b.t2vn.book_id && b.t2vn.book_id !== b.key
             ? `${b.key} → ${b.t2vn.book_id}` : b.key)
         );
 
@@ -243,22 +537,24 @@
 
         const comicCount = (b.comic && b.comic.count) || 0;
         const comicCell = comicCount
-          ? el("td", {}, el("div", {}, `${comicCount} 個專案`),
-              el("div", { class: "muted" }, (b.comic.projects || []).map((p) => p.title || p.project_id).slice(0, 2).join("、")))
+          ? el("td", {},
+              el("div", {}, `${comicCount} 個專案`),
+              el("div", { class: "muted" }, (b.comic.projects || []).map((p) => p.title || p.project_id).slice(0, 2).join("、"))
+            )
           : el("td", { class: "muted" }, "—");
 
         const acts = [];
         if (b.ns && nsUrl) {
-          acts.push(el("a", { class: "btn", href: `${nsUrl}/#/b/${enc(b.ns.id)}`, target: "novel_studio", rel: "noopener" }, "寫作 ↗"));
-          acts.push(el("a", { class: "btn", href: `${nsUrl}/#/b/${enc(b.ns.id)}/bible`, target: "novel_studio", rel: "noopener" }, "設定／視覺卡 ↗"));
+          acts.push(el("a", { class: "btn sm btn-ns", href: `${nsUrl}/#/b/${enc(b.ns.id)}`, target: "novel_studio", rel: "noopener" }, "NS 寫作 ↗"));
+          acts.push(el("a", { class: "btn sm btn-ns", href: `${nsUrl}/#/b/${enc(b.ns.id)}/bible`, target: "novel_studio", rel: "noopener" }, "NS 視覺卡 ↗"));
         }
         if (b.t2vn && b.t2vn.imported && t2Url) {
           const bid = enc(b.t2vn.book_id);
-          acts.push(el("a", { class: "btn", href: `${t2Url}/#/book/${bid}`, target: "t2vn_studio", rel: "noopener" }, "VN ↗"));
-          acts.push(el("a", { class: "btn", href: `${t2Url}/#/book/${bid}/assets`, target: "t2vn_studio", rel: "noopener" }, "外觀 ↗"));
-          acts.push(el("a", { class: "btn", href: `${t2Url}/#/book/${bid}/comic`, target: "t2vn_studio", rel: "noopener" }, "漫畫 ↗"));
+          acts.push(el("a", { class: "btn sm btn-t2vn", href: `${t2Url}/#/book/${bid}`, target: "t2vn_studio", rel: "noopener" }, "T2VN 校對 ↗"));
+          acts.push(el("a", { class: "btn sm btn-t2vn", href: `${t2Url}/#/book/${bid}/assets`, target: "t2vn_studio", rel: "noopener" }, "T2VN 外觀 ↗"));
+          acts.push(el("a", { class: "btn sm btn-t2c", href: `${t2Url}/#/book/${bid}/comic`, target: "t2vn_studio", rel: "noopener" }, "T2C 漫畫 ↗"));
         } else if (b.ns && t2Url) {
-          acts.push(el("a", { class: "btn primary", href: `${t2Url}/#/?source=${enc(b.ns.id)}`, target: "t2vn_studio", rel: "noopener" }, "匯入改編 ↗"));
+          acts.push(el("a", { class: "btn sm primary", href: `${t2Url}/#/?source=${enc(b.ns.id)}`, target: "t2vn_studio", rel: "noopener" }, "匯入 T2VN ↗"));
         }
 
         return el("tr", {}, titleCell, nsCell, t2Cell, comicCell, el("td", {}, el("div", { class: "actions" }, ...acts)));
@@ -271,7 +567,7 @@
       try {
         const res = await fetch("/api/overview", { cache: "no-store" });
         state.data = await res.json();
-        renderServices(state.data.services || {});
+        renderPipeline(state.data.services || {});
         renderBooks();
       } catch (err) {
         document.getElementById("books-body").replaceChildren(
@@ -282,6 +578,7 @@
       }
     }
 
+    initTheme();
     document.getElementById("refresh-btn").onclick = load;
     document.getElementById("filter-q").oninput = (e) => { state.q = e.target.value; renderBooks(); };
     for (const btn of document.querySelectorAll("[data-mode]")) {
