@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>t2x-suite · 創作管線總覽</title>
+  <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%238a3b2e'/><text x='16' y='23' font-size='18' text-anchor='middle' fill='%23fffdf8' font-family='serif' font-weight='700'>集</text></svg>">
   <style>
     /* 沿用 Novel Studio / T2VN 共用的 fekit 紙張書卷色系 tokens */
     :root {
@@ -550,6 +551,12 @@
       const dots = el("span", { class: "swatch-dots" },
         (theme.swatches || []).slice(1, 4).map((c) => el("i", { style: `background:${c}` })));
       btn.replaceChildren(dots, el("span", {}, `配色：${theme.name}`));
+      const fav = document.getElementById("favicon");
+      if (fav && theme.tokens.accent) {
+        const bgHex = encodeURIComponent(theme.tokens.accent);
+        const fgHex = encodeURIComponent(theme.tokens["on-accent"] || "#fffdf8");
+        fav.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${bgHex}'/><text x='16' y='23' font-size='18' text-anchor='middle' fill='${fgHex}' font-family='serif' font-weight='700'>集</text></svg>`;
+      }
     }
 
     function renderThemeGrid() {
