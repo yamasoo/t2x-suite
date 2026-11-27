@@ -16,6 +16,7 @@ from typing import Any
 
 HERE = Path(__file__).resolve().parent
 INDEX_HTML = HERE / "index.html"
+THEMES_JSON = HERE / "themes.json"
 DEFAULT_NS_URL = "http://127.0.0.1:8765"
 DEFAULT_T2VN_URL = "http://127.0.0.1:7866"
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
@@ -252,6 +253,12 @@ def make_handler(ns_url: str, t2vn_url: str, comfy_hint: str) -> type[BaseHTTPRe
                 payload = build_overview(ns_url, t2vn_url, comfy_hint)
                 body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
                 self._send_bytes(200, "application/json; charset=utf-8", body)
+                return
+            if path == "/api/themes":
+                if not THEMES_JSON.is_file():
+                    self._send_bytes(200, "application/json; charset=utf-8", b"[]")
+                    return
+                self._send_bytes(200, "application/json; charset=utf-8", THEMES_JSON.read_bytes())
                 return
             self._send_bytes(404, "application/json; charset=utf-8", b'{"error":"not_found"}')
 

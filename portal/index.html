@@ -279,6 +279,62 @@
     .gh-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
     .gh-links a { color: var(--fg-muted); font-weight: 500; }
     .gh-links a:hover { color: var(--accent); }
+
+    /* 配色模板選擇器彈窗 */
+    .swatch-dots { display: inline-flex; align-items: center; gap: 3px; }
+    .swatch-dots i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; border: 1px solid rgba(128,128,128,0.35); }
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(20, 16, 12, 0.52);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-backdrop[hidden] { display: none; }
+    .modal-panel {
+      width: min(860px, 100%); max-height: 88vh; overflow-y: auto;
+      background: var(--bg-elev); border: 1px solid var(--line-strong);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-2);
+      padding: 18px 20px 20px;
+    }
+    .modal-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--line);
+    }
+    .modal-head h2 { margin: 0; font-family: var(--font-serif); font-size: 18px; }
+    .theme-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px; margin-top: 12px;
+    }
+    .theme-card {
+      border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+      background: var(--bg); cursor: pointer; text-align: left; padding: 0;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      display: flex; flex-direction: column; color: var(--fg);
+    }
+    .theme-card:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-1); }
+    .theme-card.selected { border: 2px solid var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .theme-strip { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; height: 34px; width: 100%; }
+    .theme-meta { padding: 9px 11px; display: flex; flex-direction: column; gap: 3px; width: 100%; }
+    .theme-meta-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .theme-meta strong { font-size: 13.5px; }
+    .theme-sub { font-size: 11.5px; color: var(--fg-muted); line-height: 1.4; }
+    .custom-box {
+      margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line);
+    }
+    .custom-box summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--fg); }
+    .custom-form {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px; margin-top: 12px; align-items: end;
+    }
+    .custom-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--fg-muted); }
+    .custom-form input[type="text"], .custom-form select {
+      padding: 6px 9px; border-radius: var(--radius);
+      border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: 13px;
+    }
+    .custom-form input[type="color"] {
+      width: 100%; height: 32px; padding: 2px; border-radius: var(--radius);
+      border: 1px solid var(--line-strong); background: var(--bg); cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -294,7 +350,7 @@
       <div class="top-actions">
         <span id="comfy-pill" class="status-pill"></span>
         <a class="btn sm" href="https://github.com/yamasoo/t2x-suite" target="_blank" rel="noopener">GitHub ↗</a>
-        <button id="theme-btn" class="btn sm" type="button" title="切換淺色／深色主題">深色</button>
+        <button id="theme-btn" class="btn sm" type="button" title="選擇或紀錄配色模板">配色模板</button>
         <button id="refresh-btn" class="btn sm primary" type="button">重新整理</button>
       </div>
     </div>
@@ -344,6 +400,47 @@
     </footer>
   </div>
 
+  <div id="theme-modal" class="modal-backdrop" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-label="配色模板事典">
+      <div class="modal-head">
+        <div>
+          <h2>配色模板事典</h2>
+          <div class="muted">收錄 fekit 書卷色系與和田三造《配色總鑑》經典色組，亦可自訂並紀錄專屬模板</div>
+        </div>
+        <button id="theme-close" class="btn sm" type="button">關閉</button>
+      </div>
+      <div class="toolbar" style="margin-bottom:4px">
+        <div class="toolbar-left" id="theme-filters">
+          <button class="btn sm active" data-tf="all" type="button">全部</button>
+          <button class="btn sm" data-tf="light" type="button">淺色</button>
+          <button class="btn sm" data-tf="dark" type="button">深色</button>
+          <button class="btn sm" data-tf="custom" type="button">我的自訂</button>
+        </div>
+        <div class="toolbar-right">
+          <button id="theme-export" class="btn sm" type="button" title="下載目前所有自訂模板 JSON">匯出自訂 JSON</button>
+        </div>
+      </div>
+      <div id="theme-grid" class="theme-grid"></div>
+      <details class="custom-box">
+        <summary>＋ 自訂並紀錄新配色模板</summary>
+        <form id="custom-theme-form" class="custom-form">
+          <label>模板名稱<input id="ct-name" type="text" placeholder="例如：暮秋銀杏" required /></label>
+          <label>明暗基底
+            <select id="ct-scheme">
+              <option value="light">淺色（紙張系）</option>
+              <option value="dark">深色（夜墨系）</option>
+            </select>
+          </label>
+          <label>底色<input id="ct-bg" type="color" value="#f5f1e6" /></label>
+          <label>NS 主色<input id="ct-accent" type="color" value="#8e354a" /></label>
+          <label>T2VN 主色<input id="ct-info" type="color" value="#336e7b" /></label>
+          <label>T2C 主色<input id="ct-ok" type="color" value="#3b6e52" /></label>
+          <button class="btn sm primary" type="submit">儲存並套用</button>
+        </form>
+      </details>
+    </div>
+  </div>
+
   <script>
     "use strict";
 
@@ -374,27 +471,197 @@
     const enc = encodeURIComponent;
     let state = { data: null, mode: "all", q: "" };
 
-    /* 深淺主題切換（相容 fekit data-theme） */
-    function initTheme() {
-      const btn = document.getElementById("theme-btn");
-      const saved = localStorage.getItem("t2x.theme");
-      if (saved === "light" || saved === "dark") {
-        document.documentElement.setAttribute("data-theme", saved);
-      }
-      function syncLabel() {
-        const cur = document.documentElement.getAttribute("data-theme")
-          || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        btn.textContent = cur === "dark" ? "淺色" : "深色";
-      }
-      btn.onclick = () => {
-        const cur = document.documentElement.getAttribute("data-theme")
-          || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        const next = cur === "dark" ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", next);
-        localStorage.setItem("t2x.theme", next);
-        syncLabel();
+    /* 色彩混合工具（供自訂模板自動推導柔色與邊框） */
+    function hexToRgb(hex) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "").trim());
+      if (!m) return [128, 128, 128];
+      const v = parseInt(m[1], 16);
+      return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+    }
+    function mixHex(a, b, ratio) {
+      const [r1, g1, b1] = hexToRgb(a);
+      const [r2, g2, b2] = hexToRgb(b);
+      const p = Math.max(0, Math.min(1, ratio));
+      const toH = (x) => Math.round(x).toString(16).padStart(2, "0");
+      return "#" + toH(r1 + (r2 - r1) * p) + toH(g1 + (g2 - g1) * p) + toH(b1 + (b2 - b1) * p);
+    }
+    function buildCustomTheme(name, scheme, bg, accent, info, ok) {
+      const isDark = scheme === "dark";
+      const target = isDark ? "#ffffff" : "#1c1814";
+      const softRatio = isDark ? 0.80 : 0.84;
+      const tokens = {
+        bg,
+        "bg-elev": mixHex(bg, isDark ? "#ffffff" : "#ffffff", isDark ? 0.06 : 0.72),
+        "bg-sunken": mixHex(bg, "#000000", isDark ? 0.24 : 0.05),
+        fg: isDark ? "#ece7df" : "#28231e",
+        "fg-muted": mixHex(bg, target, 0.62),
+        "fg-faint": mixHex(bg, target, 0.44),
+        line: mixHex(bg, target, 0.14),
+        "line-strong": mixHex(bg, target, 0.25),
+        accent,
+        "accent-hover": mixHex(accent, isDark ? "#ffffff" : "#000000", 0.16),
+        "accent-soft": mixHex(accent, bg, softRatio),
+        "on-accent": isDark ? bg : "#fffdf8",
+        info,
+        "info-soft": mixHex(info, bg, softRatio),
+        ok,
+        "ok-soft": mixHex(ok, bg, softRatio),
+        warn: isDark ? "#e0b95c" : "#8a6410",
+        "warn-soft": mixHex(isDark ? "#e0b95c" : "#8a6410", bg, softRatio),
+        err: isDark ? "#ee8d86" : "#a02a2a",
+        "err-soft": mixHex(isDark ? "#ee8d86" : "#a02a2a", bg, softRatio),
       };
-      syncLabel();
+      return {
+        id: "custom-" + Date.now().toString(36),
+        name: name.trim(),
+        subtitle: `自訂模板 · ${isDark ? "深色" : "淺色"}`,
+        scheme,
+        source: "custom",
+        swatches: [bg, accent, info, ok],
+        tokens,
+      };
+    }
+
+    let themeState = { builtins: [], customs: [], currentId: "", filter: "all" };
+
+    function loadCustomThemes() {
+      try {
+        const raw = JSON.parse(localStorage.getItem("t2x.custom_themes") || "[]");
+        return Array.isArray(raw) ? raw.filter((t) => t && t.id && t.tokens) : [];
+      } catch (_) { return []; }
+    }
+    function saveCustomThemes(list) {
+      localStorage.setItem("t2x.custom_themes", JSON.stringify(list));
+    }
+    function allThemes() {
+      return [...themeState.builtins, ...themeState.customs];
+    }
+
+    function applyTheme(theme) {
+      if (!theme || !theme.tokens) return;
+      const root = document.documentElement;
+      root.setAttribute("data-theme", theme.scheme === "dark" ? "dark" : "light");
+      for (const [k, v] of Object.entries(theme.tokens)) {
+        root.style.setProperty(`--${k}`, v);
+      }
+      themeState.currentId = theme.id;
+      localStorage.setItem("t2x.theme_id", theme.id);
+      const btn = document.getElementById("theme-btn");
+      const dots = el("span", { class: "swatch-dots" },
+        (theme.swatches || []).slice(1, 4).map((c) => el("i", { style: `background:${c}` })));
+      btn.replaceChildren(dots, el("span", {}, `配色：${theme.name}`));
+    }
+
+    function renderThemeGrid() {
+      const grid = document.getElementById("theme-grid");
+      const items = allThemes().filter((t) => {
+        if (themeState.filter === "light") return t.scheme !== "dark";
+        if (themeState.filter === "dark") return t.scheme === "dark";
+        if (themeState.filter === "custom") return t.source === "custom";
+        return true;
+      });
+      if (!items.length) {
+        grid.replaceChildren(el("div", { class: "muted", style: "padding:14px 2px" }, "尚無符合條件的模板。"));
+        return;
+      }
+      grid.replaceChildren(...items.map((t) => {
+        const strip = el("div", { class: "theme-strip" },
+          (t.swatches || [t.tokens.bg, t.tokens.accent, t.tokens.info, t.tokens.ok]).map((c) =>
+            el("span", { style: `background:${c}` })
+          ));
+        const delBtn = t.source === "custom"
+          ? el("button", {
+              class: "btn sm",
+              type: "button",
+              title: "刪除此自訂模板",
+              onclick: (ev) => {
+                ev.stopPropagation();
+                themeState.customs = themeState.customs.filter((x) => x.id !== t.id);
+                saveCustomThemes(themeState.customs);
+                if (themeState.currentId === t.id && themeState.builtins.length) {
+                  applyTheme(themeState.builtins[0]);
+                }
+                renderThemeGrid();
+              },
+            }, "刪除")
+          : null;
+        return el("div", {
+          class: "theme-card" + (t.id === themeState.currentId ? " selected" : ""),
+          role: "button",
+          tabindex: "0",
+          onclick: () => { applyTheme(t); renderThemeGrid(); },
+          onkeydown: (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); applyTheme(t); renderThemeGrid(); } },
+        },
+          strip,
+          el("div", { class: "theme-meta" },
+            el("div", { class: "theme-meta-top" },
+              el("strong", {}, t.name),
+              el("span", { class: "badge" }, t.scheme === "dark" ? "深色" : "淺色")
+            ),
+            el("div", { class: "theme-sub" }, t.subtitle || ""),
+            delBtn ? el("div", { style: "margin-top:4px" }, delBtn) : null
+          ));
+      }));
+    }
+
+    async function initTheme() {
+      themeState.customs = loadCustomThemes();
+      try {
+        const res = await fetch("/api/themes", { cache: "no-store" });
+        const list = await res.json();
+        if (Array.isArray(list)) themeState.builtins = list;
+      } catch (_) { themeState.builtins = []; }
+
+      const savedId = localStorage.getItem("t2x.theme_id");
+      const preferDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const picked = allThemes().find((t) => t.id === savedId)
+        || themeState.builtins.find((t) => t.id === (preferDark ? "fekit-ink" : "fekit-paper"))
+        || themeState.builtins[0];
+      if (picked) applyTheme(picked);
+
+      const modal = document.getElementById("theme-modal");
+      document.getElementById("theme-btn").onclick = () => { renderThemeGrid(); modal.hidden = false; };
+      document.getElementById("theme-close").onclick = () => { modal.hidden = true; };
+      modal.onclick = (ev) => { if (ev.target === modal) modal.hidden = true; };
+      document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !modal.hidden) modal.hidden = true; });
+
+      for (const b of document.querySelectorAll("[data-tf]")) {
+        b.onclick = () => {
+          themeState.filter = b.getAttribute("data-tf");
+          for (const o of document.querySelectorAll("[data-tf]")) o.classList.toggle("active", o === b);
+          renderThemeGrid();
+        };
+      }
+
+      const schemeSel = document.getElementById("ct-scheme");
+      schemeSel.onchange = () => {
+        document.getElementById("ct-bg").value = schemeSel.value === "dark" ? "#1b222c" : "#f5f1e6";
+      };
+      document.getElementById("custom-theme-form").onsubmit = (ev) => {
+        ev.preventDefault();
+        const name = document.getElementById("ct-name").value.trim();
+        if (!name) return;
+        const t = buildCustomTheme(
+          name,
+          schemeSel.value,
+          document.getElementById("ct-bg").value,
+          document.getElementById("ct-accent").value,
+          document.getElementById("ct-info").value,
+          document.getElementById("ct-ok").value
+        );
+        themeState.customs.push(t);
+        saveCustomThemes(themeState.customs);
+        applyTheme(t);
+        document.getElementById("ct-name").value = "";
+        renderThemeGrid();
+      };
+
+      document.getElementById("theme-export").onclick = () => {
+        const blob = new Blob([JSON.stringify(themeState.customs, null, 2)], { type: "application/json" });
+        const a = el("a", { href: URL.createObjectURL(blob), download: "t2x-custom-themes.json" });
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      };
     }
 
     function statusPill(label, info) {

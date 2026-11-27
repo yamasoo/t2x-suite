@@ -116,6 +116,29 @@ class TestPortalOverview(unittest.TestCase):
         self.assertFalse(res["services"]["t2vn"]["online"])
         self.assertEqual(res["books"], [])
 
+    def test_themes_catalog_valid(self):
+        import json
+        import re
+
+        themes_path = PORTAL_DIR / "themes.json"
+        self.assertTrue(themes_path.is_file())
+        themes = json.loads(themes_path.read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(themes), 10)
+        required_tokens = {
+            "bg", "bg-elev", "bg-sunken", "fg", "fg-muted", "fg-faint",
+            "line", "line-strong", "accent", "accent-hover", "accent-soft", "on-accent",
+            "info", "info-soft", "ok", "ok-soft", "warn", "warn-soft", "err", "err-soft",
+        }
+        ids = set()
+        for t in themes:
+            self.assertNotIn(t["id"], ids)
+            ids.add(t["id"])
+            self.assertIn(t["scheme"], ("light", "dark"))
+            self.assertEqual(len(t["swatches"]), 4)
+            self.assertTrue(required_tokens.issubset(set(t["tokens"].keys())))
+            for val in t["tokens"].values():
+                self.assertRegex(val, r"^#[0-9a-fA-F]{6}$")
+
 
 if __name__ == "__main__":
     unittest.main()
